@@ -210,17 +210,42 @@ namespace WebSnif
             StreamReader streamReader;
             StreamWriter streamWriter;
             try
-            {
-                tcpClient = new TcpClient("127.0.0.1", 5555);
+            { //string hostname = "localhost";
+                string hostname = "tv2.dk";
+                int port = 80;
+                tcpClient = new TcpClient(hostname, port);
                 //tcpClient = new TcpClient("10.31.248.6", 5555);
                 //tcpClient = new TcpClient("localhost", 5555);
                 networkStream = tcpClient.GetStream();
                 streamReader = new StreamReader(networkStream);
                 streamWriter = new StreamWriter(networkStream);
-                streamWriter.WriteLine("Message from the Client...");
+                //streamWriter.WriteLine("Message from the Client...");
                 //streamWriter.Flush();
-                streamWriter.WriteLine("QUIT");
+                //streamWriter.WriteLine("QUIT");
+                streamWriter.WriteLine("GET / HTTP/1.1");
+                streamWriter.WriteLine("HOST: "+hostname+":" +port);
+                streamWriter.WriteLine("");
                 streamWriter.Flush();
+
+                string line = streamReader.ReadLine();
+                Console.WriteLine(line);
+
+
+
+                for(int i=0; i<10; )
+                {
+                    line = streamReader.ReadLine();
+                    if(line!=null && line.Length>0)
+                    Console.WriteLine(line);
+                    if(line==null)
+                    {
+                        i++;
+                        Thread.Sleep(10);
+                    }
+
+                }
+
+
 
             }
             catch (SocketException ex)
@@ -369,25 +394,25 @@ namespace WebSnif
 
         public void StartClientServer()
         {
-            SocketServer socketServer = new SocketServer();
+            //SocketServer socketServer = new SocketServer();
             SocketClient socketClient = new SocketClient();
-            FtpClient ftpClient = new FtpClient();
+            //FtpClient ftpClient = new FtpClient();
 
-            Thread serverThread = new Thread(new ThreadStart(socketServer.Run));
-            serverThread.Start();
+            //Thread serverThread = new Thread(new ThreadStart(socketServer.Run));
+            //serverThread.Start();
 
-            while (!serverThread.IsAlive)
-                Console.WriteLine("Waiting for serverThread.IsAlive");
+            //while (!serverThread.IsAlive)
+            //    Console.WriteLine("Waiting for serverThread.IsAlive");
 
             Thread clientThread = new Thread(new ThreadStart(socketClient.Run));
-            //clientThread.Start();
+            clientThread.Start();
 
-            Thread ftpThread = new Thread(new ThreadStart(ftpClient.Run));
+            //Thread ftpThread = new Thread(new ThreadStart(ftpClient.Run));
             //ftpThread.Start();
 
 
 
-            serverThread.Join();
+            //serverThread.Join();
             //clientThread.Join();
             //ftpThread.Join();
 
@@ -420,7 +445,7 @@ namespace WebSnif
 
         public void Server()
         {
-            int port = 3333;
+            int port = 88;
             //TcpListener listener = new TcpListener(IPAddress.Any, port);
             TcpListener listener = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
             listener.Start();
@@ -450,10 +475,12 @@ namespace WebSnif
                         {
                             string line = reader.ReadLine();
                             Console.WriteLine("Server: {0} har læst", port);
+                        Console.WriteLine(line);
                             if (line == "QUIT")
                                 keepGoing = false;
                             writer.WriteLine("Server:" + port + "  From Thread[" + Thread.CurrentThread.ManagedThreadId + "] > " + line);
-                            Console.WriteLine("Server: {0} har skrevet", port);
+                            Console.WriteLine("Server:" + port + "  From Thread[" + Thread.CurrentThread.ManagedThreadId + "] > " + line);
+                            //Console.WriteLine("Server: {0} har skrevet", port);
                             writer.Flush();
                         }
                         //client.Close(); // using(client) ought to do that, and it actually does
@@ -610,6 +637,26 @@ namespace WebSnif
             //});
         }
 
+
+
+
+        void myDns()        {
+            //string hostName = Dns.GetHostName();
+            string hostName = "tv2.dk";
+            try            {
+                IPAddress[] ipAddress = Dns.GetHostEntry(hostName).AddressList;
+                foreach (IPAddress address in ipAddress)
+                    Console.WriteLine("{0}/{1}", hostName, address);
+            }
+            catch (Exception ex)            {
+                Console.WriteLine("Error occurred: " + ex.Message);
+            }
+        }
+
+
+
+
+
         public void StartUdpClientServer()
         {
             Console.WriteLine("StartUdpClientServer A");
@@ -635,10 +682,11 @@ namespace WebSnif
 
         static void Main(string[] args)
         {
+            //new WebSniffer().myDns();
             //new WebSniffer().Snif();
             //new WebSniffer().StartServer1();
-            new WebSniffer().StartUdpClientServer();
-            //new WebSniffer().StartClientServer();
+            //new WebSniffer().StartUdpClientServer();
+            new WebSniffer().StartClientServer();
             //new WebSniffer().udp();
             Console.WriteLine("Press a key ... any ole key will do.");
             //Console.Read();
